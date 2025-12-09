@@ -21,6 +21,7 @@ th,td{border:1px solid #999;padding:6px;text-align:center}
 
 <h2>نظام تعبئة وتحليل المنحة</h2>
 
+<!-- بيانات الرأس -->
 <label>المديرية:</label>
 <input id="directorate">
 
@@ -42,6 +43,7 @@ th,td{border:1px solid #999;padding:6px;text-align:center}
 
 <hr>
 
+<!-- نسب الصرف -->
 <h3>نسب الصرف الرئيسية (يجب أن يكون مجموعها = 100%)</h3>
 
 <table>
@@ -61,4 +63,75 @@ th,td{border:1px solid #999;padding:6px;text-align:center}
 </tr>
 </table>
 
-<div id
+<div id="percentWarning" class="error"></div>
+
+<hr>
+
+<!-- إضافة فاتورة -->
+<h3>إضافة فاتورة جديدة</h3>
+
+رقم الفاتورة <input id="invoiceNo">
+التاريخ <input id="invoiceDate" type="date">
+مبلغ الفاتورة <input id="invoiceAmount" type="number">
+
+<br><br>
+
+<table>
+<tr>
+<th>مجتمعات التعلم</th>
+<th>الصيانة</th>
+<th>الشراكة</th>
+<th>لوازم التعلم</th>
+<th>تشجيع التميز</th>
+</tr>
+<tr>
+<td><input id="c1"></td>
+<td><input id="c2"></td>
+<td><input id="c3"></td>
+<td><input id="c4"></td>
+<td><input id="c5"></td>
+</tr>
+</table>
+
+<div class="summary">
+مجموع التوزيع = <span id="sumDist">0</span>
+</div>
+
+<div id="limitWarning" class="error"></div>
+
+<br>
+<button onclick="addInvoice()">إضافة الفاتورة</button>
+
+<hr>
+
+<!-- جدول الفواتير -->
+<h3>الفواتير المُضافة</h3>
+
+<table id="invoiceTable">
+<thead>
+<tr>
+<th>رقم</th>
+<th>تاريخ</th>
+<th>مجتمعات التعلم</th>
+<th>الصيانة</th>
+<th>الشراكة</th>
+<th>لوازم التعلم</th>
+<th>تشجيع التميز</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+
+<hr>
+
+<!-- أزرار Excel -->
+<button onclick="testOpenExcel()">🔎 اختبار فتح ملف Excel</button>
+<button onclick="updateExcel()">✅ تحديث ملف Excel الأصلي</button>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
