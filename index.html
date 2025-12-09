@@ -1,111 +1,74 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>توزيع المنحة</title>
-
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-            background: #f2f2f2;
-        }
-        .box {
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            max-width: 900px;
-            margin: auto;
-            box-shadow: 0 0 10px #ccc;
-        }
-        input, button {
-            padding: 8px;
-            margin: 5px 0;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-        table, th, td {
-            border: 1px solid #999;
-        }
-        th, td {
-            padding: 8px;
-            text-align: center;
-        }
-    </style>
+<meta charset="UTF-8">
+<title>نظام توزيع المنحة</title>
+<style>
+body{font-family:Arial;background:#f2f2f2;padding:20px}
+.box{background:#fff;padding:20px;border-radius:8px;max-width:1000px;margin:auto}
+input,button{padding:6px;margin:4px}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{border:1px solid #999;padding:6px;text-align:center}
+.summary{background:#e8f0ff;padding:10px;border-radius:6px;margin-top:10px}
+</style>
 </head>
 
 <body>
-    <div class="box">
-        <h2>نظام توزيع المنحة</h2>
 
-        <label>المديرية:</label>
-        <input id="directorate" type="text"><br>
+<div class="box">
 
-        <label>المدرسة:</label>
-        <input id="school" type="text"><br>
+<h2>نظام توزيع المنحة</h2>
 
-        <label>الرصيد المدور:</label>
-        <input id="rolled" type="number"><br>
+<label>المديرية:</label>
+<input id="directorate"><br>
 
-        <label>المنحة الحالية:</label>
-        <input id="grant" type="number"><br>
+<label>المدرسة:</label>
+<input id="school"><br>
 
-        <!-- زر حساب الرصيد -->
-        <button id="calcBtn" type="button">حساب الرصيد</button>
+<label>الرصيد المدور:</label>
+<input id="rolled" type="number"><br>
 
-        <h3>الرصيد الحالي: <span id="currentBalance">0</span></h3>
+<label>المنحة الحالية:</label>
+<input id="grant" type="number"><br>
 
-        <hr>
+<button id="calcBtn">حساب الرصيد</button>
 
-        <h3>إدخال فاتورة</h3>
+<div class="summary">
+الرصيد الإجمالي الحالي: <b><span id="currentBalance">0</span></b> |
+مجموع الفواتير: <b><span id="totalInvoices">0</span></b> |
+الرصيد المتبقي الكلي: <b><span id="totalRemain">0</span></b>
+</div>
 
-        <label>رقم الفاتورة:</label>
-        <input id="invoiceNo" type="text"><br>
+<hr>
 
-        <label>التاريخ:</label>
-        <input id="invoiceDate" type="date"><br>
+<h3>إضافة فاتورة</h3>
 
-        <label>المبلغ:</label>
-        <input id="invoiceAmount" type="number"><br>
+رقم الفاتورة <input id="invoiceNo">
+التاريخ <input id="invoiceDate" type="date">
+المبلغ <input id="invoiceAmount" type="number">
+<button id="addInvoiceBtn">إضافة</button>
 
-        <!-- زر إضافة فاتورة -->
-        <button id="addInvoiceBtn" type="button">إضافة الفاتورة</button>
+<table id="invoiceTable">
+<thead>
+<tr>
+<th>رقم</th><th>تاريخ</th><th>المبلغ</th>
+<th>مجتمعات التعلم</th>
+<th>الصيانة</th>
+<th>الشراكة</th>
+<th>لوازم التعلم</th>
+<th>الرصيد المتبقي</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
 
-        <h3>الفواتير</h3>
-        <table id="invoiceTable">
-            <thead>
-                <tr>
-                    <th>رقم الفاتورة</th>
-                    <th>التاريخ</th>
-                    <th>المبلغ</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
+<br>
+<button id="downloadBtn">تنزيل ملف Excel</button>
 
-        <h3>توزيع المبلغ المقترح</h3>
+</div>
 
-        <table>
-            <tr><th>البند</th><th>الحد المسموح</th><th>المقترح (دينار)</th></tr>
-            <tr><td>مجتمعات التعلم</td><td>5–20%</td><td id="c1"></td></tr>
-            <tr><td>الصيانة</td><td>5–40%</td><td id="c2"></td></tr>
-            <tr><td>الشراكة مع المجتمع</td><td>5–15%</td><td id="c3"></td></tr>
-            <tr><td>لوازم التعلم عن بعد</td><td>5–40%</td><td id="c4"></td></tr>
-        </table>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="app.js"></script>
 
-        <h3>الرصيد المتبقي: <span id="remain">0</span></h3>
-
-        <!-- زر تنزيل الإكسل -->
-        <button id="downloadBtn" type="button">تنزيل ملف Excel</button>
-    </div>
-
-    <!-- مكتبة Excel -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <!-- سكربت التطبيق -->
-    <script src="app.js"></script>
 </body>
 </html>
