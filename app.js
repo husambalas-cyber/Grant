@@ -12,14 +12,24 @@ function calculateBalance(){
     updateTotals();
 }
 
-// ✅ إضافة فاتورة
+// ✅ إظهار نموذج إدخال فاتورة جديدة + تفريغ الحقول
+function showNewInvoiceForm(){
+    invoiceNo.value = "";
+    invoiceDate.value = "";
+    invoiceAmount.value = "";
+
+    document.getElementById("invoiceForm").style.display = "block";
+    invoiceNo.focus();
+}
+
+// ✅ إضافة الفاتورة إلى الجدول
 function addInvoice(){
     const no = invoiceNo.value.trim();
     const date = invoiceDate.value;
     const amount = Number(invoiceAmount.value);
 
     if(!no || !date || !amount){
-        alert("يرجى إدخال جميع بيانات الفاتورة");
+        alert("يرجى إدخال رقم الفاتورة والتاريخ والمبلغ");
         return;
     }
 
@@ -35,9 +45,12 @@ function addInvoice(){
 
     updateInvoiceTable();
     updateTotals();
+
+    // ✅ إخفاء النموذج بعد الإضافة
+    document.getElementById("invoiceForm").style.display = "none";
 }
 
-// ✅ عرض الجدول
+// ✅ عرض الجدول مع السماح بالتعديل
 function updateInvoiceTable(){
     const tbody = document.querySelector("#invoiceTable tbody");
     tbody.innerHTML = "";
@@ -93,23 +106,37 @@ function updateTotals(){
     totalRemain.innerText   = remain.toFixed(2);
 }
 
-// ✅ إنتاج نسخة جديدة من ملف "تحليل المنحة" مع تحديث الخلايا فقط
+// ✅ تحديث القالب المرفوع وإضافة الفواتير تحته
 async function downloadExcel(){
 
-    const response = await fetch("تحليل المنحة.xlsx");
-    const arrayBuffer = await response.arrayBuffer();
+    const fileInput = document.getElementById("templateFile");
+
+    if(!fileInput.files.length){
+        alert("يرجى اختيار ملف القالب أولًا");
+        return;
+    }
+
+    const file = fileInput.files[0];
+    const arrayBuffer = await file.arrayBuffer();
     const wb = XLSX.read(arrayBuffer, { type: "array" });
 
     const ws = wb.Sheets["تحليل منحة المدرسة"];
 
-    // ✅ تحديث الخلايا المسموح بها فقط
+    // ✅ تحديث خلايا الرأس فقط
     ws["C4"] = { t:"s", v: directorate.value };
     ws["C5"] = { t:"s", v: school.value };
     ws["D5"] = { t:"n", v: Number(rolled.value) || 0 };
     ws["E5"] = { t:"n", v: Number(grant.value)  || 0 };
 
+    // ✅ البحث عن آخر صف مستخدم
     let startRow = 25;
+    for(let r = 25; r < 500; r++){
+        if(ws["E"+r] && ws["E"+r].v){
+            startRow = r + 1;
+        }
+    }
 
+    // ✅ إضافة الفواتير الجديدة تحت القديمة
     invoices.forEach((inv, index)=>{
         const r = startRow + index;
 
@@ -124,13 +151,13 @@ async function downloadExcel(){
         ws["L"+r] = { t:"n", v: inv.c4 };
     });
 
-    // ✅ إنتاج نسخة جديدة محدثة مع الحفاظ على القالب
-    XLSX.writeFile(wb, "تحليل المنحة_معبأ.xlsx");
+    XLSX.writeFile(wb, file.name);
 }
 
 // ✅ ربط الأزرار
 document.addEventListener("DOMContentLoaded", ()=>{
-    calcBtn.onclick       = calculateBalance;
+    calcBtn.onclick        = calculateBalance;
+    newInvoiceBtn.onclick = showNewInvoiceForm;
     addInvoiceBtn.onclick = addInvoice;
     downloadBtn.onclick   = downloadExcel;
 });
