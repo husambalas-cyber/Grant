@@ -4,7 +4,7 @@ let fixedBalance = 0;
 // ✅ حساب الرصيد الكلي مرة واحدة
 function calculateBalance(){
     const rolledVal = Number(rolled.value) || 0;
-    const grantVal  = Number(grant.value) || 0;
+    const grantVal  = Number(grant.value)  || 0;
 
     fixedBalance = rolledVal + grantVal;
     currentBalance.innerText = fixedBalance.toFixed(2);
@@ -37,7 +37,7 @@ function addInvoice(){
     updateTotals();
 }
 
-// ✅ عرض الجدول مع السماح بالتعديل
+// ✅ عرض الجدول
 function updateInvoiceTable(){
     const tbody = document.querySelector("#invoiceTable tbody");
     tbody.innerHTML = "";
@@ -68,7 +68,7 @@ function updateInvoiceTable(){
     });
 }
 
-// ✅ تعديل توزيع الفاتورة مباشرة
+// ✅ تعديل التوزيع
 function editDist(e){
     const i = Number(e.target.dataset.i);
     const field = e.target.dataset.f;
@@ -93,7 +93,7 @@ function updateTotals(){
     totalRemain.innerText   = remain.toFixed(2);
 }
 
-// ✅ تحديث القالب الأصلي وتنزيله
+// ✅ إنتاج نسخة جديدة من ملف "تحليل المنحة" مع تحديث الخلايا فقط
 async function downloadExcel(){
 
     const response = await fetch("تحليل المنحة.xlsx");
@@ -102,13 +102,12 @@ async function downloadExcel(){
 
     const ws = wb.Sheets["تحليل منحة المدرسة"];
 
-    // ✅ تحديث بيانات الرأس
+    // ✅ تحديث الخلايا المسموح بها فقط
     ws["C4"] = { t:"s", v: directorate.value };
     ws["C5"] = { t:"s", v: school.value };
     ws["D5"] = { t:"n", v: Number(rolled.value) || 0 };
-    ws["E5"] = { t:"n", v: Number(grant.value) || 0 };
+    ws["E5"] = { t:"n", v: Number(grant.value)  || 0 };
 
-    // ✅ إدخال الفواتير من الصف 25 نزولًا
     let startRow = 25;
 
     invoices.forEach((inv, index)=>{
@@ -125,12 +124,13 @@ async function downloadExcel(){
         ws["L"+r] = { t:"n", v: inv.c4 };
     });
 
-    XLSX.writeFile(wb, "تحليل المنحة.xlsx");
+    // ✅ إنتاج نسخة جديدة محدثة مع الحفاظ على القالب
+    XLSX.writeFile(wb, "تحليل المنحة_معبأ.xlsx");
 }
 
 // ✅ ربط الأزرار
 document.addEventListener("DOMContentLoaded", ()=>{
-    calcBtn.onclick      = calculateBalance;
+    calcBtn.onclick       = calculateBalance;
     addInvoiceBtn.onclick = addInvoice;
-    downloadBtn.onclick  = downloadExcel;
+    downloadBtn.onclick   = downloadExcel;
 });
