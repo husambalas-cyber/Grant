@@ -22,7 +22,7 @@ function showNewInvoiceForm(){
     invoiceNo.focus();
 }
 
-// ✅ إضافة الفاتورة إلى الجدول
+// ✅ إضافة الفاتورة إلى الجدول (بدون تفريغ)
 function addInvoice(){
     const no = invoiceNo.value.trim();
     const date = invoiceDate.value;
@@ -46,8 +46,7 @@ function addInvoice(){
     updateInvoiceTable();
     updateTotals();
 
-    // ✅ إخفاء النموذج بعد الإضافة
-    document.getElementById("invoiceForm").style.display = "none";
+    alert("تمت إضافة الفاتورة بنجاح");
 }
 
 // ✅ عرض الجدول مع السماح بالتعديل
@@ -106,7 +105,7 @@ function updateTotals(){
     totalRemain.innerText   = remain.toFixed(2);
 }
 
-// ✅ تحديث القالب المرفوع وإضافة الفواتير تحته
+// ✅ تحديث القالب المرفوع وإضافة الفواتير تحته مع الحفاظ على التنسيق
 async function downloadExcel(){
 
     const fileInput = document.getElementById("templateFile");
@@ -128,15 +127,15 @@ async function downloadExcel(){
     ws["D5"] = { t:"n", v: Number(rolled.value) || 0 };
     ws["E5"] = { t:"n", v: Number(grant.value)  || 0 };
 
-    // ✅ البحث عن آخر صف مستخدم
+    // ✅ البحث عن آخر صف مستخدم في العمود E
     let startRow = 25;
-    for(let r = 25; r < 500; r++){
+    for(let r = 25; r < 1000; r++){
         if(ws["E"+r] && ws["E"+r].v){
             startRow = r + 1;
         }
     }
 
-    // ✅ إضافة الفواتير الجديدة تحت القديمة
+    // ✅ إضافة الفواتير الجديدة تحت القديمة مباشرة
     invoices.forEach((inv, index)=>{
         const r = startRow + index;
 
@@ -151,6 +150,7 @@ async function downloadExcel(){
         ws["L"+r] = { t:"n", v: inv.c4 };
     });
 
+    // ✅ تنزيل نسخة جديدة من نفس القالب
     XLSX.writeFile(wb, file.name);
 }
 
