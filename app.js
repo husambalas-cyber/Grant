@@ -1,128 +1,96 @@
-// تخزين الفواتير
 let invoices = [];
+let fixedBalance = 0;
 
-// حساب الرصيد الحالي = المدور + المنحة الحالية
-function calculateBalance() {
-    const rolled = Number(document.getElementById("rolled").value) || 0;
-    const grant = Number(document.getElementById("grant").value) || 0;
-    const total = rolled + grant;
-    document.getElementById("currentBalance").innerText = total.toFixed(2);
+function calculateBalance(){
+    const rolled = Number(document.getElementById("rolled").value);
+    const grant = Number(document.getElementById("grant").value);
+    fixedBalance = rolled + grant;
+    document.getElementById("currentBalance").innerText = fixedBalance.toFixed(2);
+    updateTotals();
 }
 
-// إضافة فاتورة إلى القائمة
-function addInvoice() {
-    const no = document.getElementById("invoiceNo").value.trim();
-    const date = document.getElementById("invoiceDate").value;
-    const amount = Number(document.getElementById("invoiceAmount").value);
+function addInvoice(){
+    const no = invoiceNo.value;
+    const date = invoiceDate.value;
+    const amount = Number(invoiceAmount.value);
 
-    if (!no || !date || !amount) {
-        alert("يرجى إدخال رقم الفاتورة، التاريخ، والمبلغ");
+    if(!no || !date || !amount){
+        alert("أكمل جميع بيانات الفاتورة");
         return;
     }
 
-    invoices.push({ no, date, amount });
+    invoices.push({
+        no,date,amount,
+        c1:(amount*0.1),
+        c2:(amount*0.3),
+        c3:(amount*0.1),
+        c4:(amount*0.5)
+    });
+
     updateInvoiceTable();
-    calculateDistribution();
+    updateTotals();
 }
 
-// تحديث جدول الفواتير
-function updateInvoiceTable() {
+function updateInvoiceTable(){
     const tbody = document.querySelector("#invoiceTable tbody");
     tbody.innerHTML = "";
 
-    invoices.forEach(inv => {
-        const row = document.createElement("tr");
+    invoices.forEach((inv,i)=>{
+        const remain = inv.amount - (inv.c1+inv.c2+inv.c3+inv.c4);
 
-        const c1 = document.createElement("td");
-        c1.textContent = inv.no;
-
-        const c2 = document.createElement("td");
-        c2.textContent = inv.date;
-
-        const c3 = document.createElement("td");
-        c3.textContent = inv.amount.toFixed(2);
-
-        row.appendChild(c1);
-        row.appendChild(c2);
-        row.appendChild(c3);
-        tbody.appendChild(row);
+        const row = `
+        <tr>
+        <td>${inv.no}</td>
+        <td>${inv.date}</td>
+        <td>${inv.amount.toFixed(2)}</td>
+        <td><input type="number" value="${inv.c1.toFixed(2)}" oninput="editDist(${i},'c1',this.value)"></td>
+        <td><input type="number" value="${inv.c2.toFixed(2)}" oninput="editDist(${i},'c2',this.value)"></td>
+        <td><input type="number" value="${inv.c3.toFixed(2)}" oninput="editDist(${i},'c3',this.value)"></td>
+        <td><input type="number" value="${inv.c4.toFixed(2)}" oninput="editDist(${i},'c4',this.value)"></td>
+        <td>${remain.toFixed(2)}</td>
+        </tr>`;
+        tbody.innerHTML += row;
     });
 }
 
-// حساب التوزيع المقترح (مبدئياً داخل حدود النسب فقط)
-function calculateDistribution() {
-    const totalInvoices = invoices.reduce((sum, inv) => sum + inv.amount, 0);
-
-    if (totalInvoices === 0) {
-        document.getElementById("c1").innerText = "";
-        document.getElementById("c2").innerText = "";
-        document.getElementById("c3").innerText = "";
-        document.getElementById("c4").innerText = "";
-        document.getElementById("remain").innerText = "0.00";
-        return;
-    }
-
-    // هنا مؤقتاً نختار نسب داخل الحدود فقط
-    const p1 = randomInRange(5, 20); // مجتمعات التعلم
-    const p2 = randomInRange(5, 40); // الصيانة
-    const p3 = randomInRange(5, 15); // الشراكة
-    const p4 = randomInRange(5, 40); // لوازم التعلم
-
-    const v1 = (p1 / 100) * totalInvoices;
-    const v2 = (p2 / 100) * totalInvoices;
-    const v3 = (p3 / 100) * totalInvoices;
-    const v4 = (p4 / 100) * totalInvoices;
-
-    document.getElementById("c1").innerText = v1.toFixed(2);
-    document.getElementById("c2").innerText = v2.toFixed(2);
-    document.getElementById("c3").innerText = v3.toFixed(2);
-    document.getElementById("c4").innerText = v4.toFixed(2);
-
-    const distributed = v1 + v2 + v3 + v4;
-    const remain = totalInvoices - distributed;
-    document.getElementById("remain").innerText = remain.toFixed(2);
+function editDist(i,field,val){
+    invoices[i][field] = Number(val);
+    updateInvoiceTable();
+    updateTotals();
 }
 
-// دالة توليد رقم عشوائي بين حدين (للتوزيع المؤقت)
-function randomInRange(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+function updateTotals(){
+    const totalInv = invoices.reduce((s,i)=>s+i.amount,0);
+    const remain = fixedBalance - totalInv;
+
+    document.getElementById("totalInvoices").innerText = totalInv.toFixed(2);
+    document.getElementById("totalRemain").innerText = remain.toFixed(2);
 }
 
-// تنزيل ملف Excel
-function downloadExcel() {
-    if (typeof XLSX === "undefined") {
-        alert("لم يتم تحميل مكتبة Excel بشكل صحيح");
-        return;
-    }
-
+function downloadExcel(){
     const wb = XLSX.utils.book_new();
 
     const header = [
-        ["المديرية", document.getElementById("directorate").value],
-        ["المدرسة", document.getElementById("school").value],
-        ["الرصيد المدور", document.getElementById("rolled").value],
-        ["المنحة الحالية", document.getElementById("grant").value],
-        ["الرصيد الحالي", document.getElementById("currentBalance").innerText],
+        ["المديرية",directorate.value],
+        ["المدرسة",school.value],
+        ["الرصيد الكلي",fixedBalance],
         [],
-        ["الفواتير"],
-        ["رقم الفاتورة", "التاريخ", "المبلغ"],
+        ["رقم","تاريخ","المبلغ","تعلم","صيانة","شراكة","لوازم","متبقي"]
     ];
 
-    const tableRows = invoices.map(inv => [inv.no, inv.date, inv.amount]);
+    const rows = invoices.map(i=>[
+        i.no,i.date,i.amount,i.c1,i.c2,i.c3,i.c4,
+        i.amount-(i.c1+i.c2+i.c3+i.c4)
+    ]);
 
-    const ws = XLSX.utils.aoa_to_sheet([...header, ...tableRows]);
-    XLSX.utils.book_append_sheet(wb, ws, "Grant");
+    const ws = XLSX.utils.aoa_to_sheet([...header,...rows]);
+    XLSX.utils.book_append_sheet(wb, ws, "المنحة");
 
-    XLSX.writeFile(wb, "Grant.xlsx");
+    XLSX.writeFile(wb,"Grant.xlsx");
 }
 
-// ربط الأزرار بعد تحميل الصفحة
-window.addEventListener("DOMContentLoaded", () => {
-    const calcBtn = document.getElementById("calcBtn");
-    const addInvoiceBtn = document.getElementById("addInvoiceBtn");
-    const downloadBtn = document.getElementById("downloadBtn");
-
-    if (calcBtn) calcBtn.addEventListener("click", calculateBalance);
-    if (addInvoiceBtn) addInvoiceBtn.addEventListener("click", addInvoice);
-    if (downloadBtn) downloadBtn.addEventListener("click", downloadExcel);
+document.addEventListener("DOMContentLoaded",()=>{
+    calcBtn.onclick = calculateBalance;
+    addInvoiceBtn.onclick = addInvoice;
+    downloadBtn.onclick = downloadExcel;
 });
