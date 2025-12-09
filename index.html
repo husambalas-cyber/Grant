@@ -2,14 +2,42 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>نظام توزيع المنحة</title>
+<title>نظام تحليل المنحة</title>
+
 <style>
-body{font-family:Arial;background:#f2f2f2;padding:20px}
-.box{background:#fff;padding:20px;border-radius:8px;max-width:1000px;margin:auto}
-input,button{padding:6px;margin:4px}
-table{width:100%;border-collapse:collapse;margin-top:10px}
-th,td{border:1px solid #999;padding:6px;text-align:center}
-.summary{background:#e8f0ff;padding:10px;border-radius:6px;margin-top:10px}
+body{
+    font-family: Arial;
+    background:#f2f2f2;
+    padding:20px;
+}
+.box{
+    background:#fff;
+    padding:20px;
+    border-radius:8px;
+    max-width:1200px;
+    margin:auto;
+}
+input,button{
+    padding:6px;
+    margin:4px;
+}
+table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:10px;
+}
+th,td{
+    border:1px solid #999;
+    padding:6px;
+    text-align:center;
+}
+.summary{
+    background:#e8f0ff;
+    padding:10px;
+    border-radius:6px;
+    margin-top:10px;
+    font-weight:bold;
+}
 </style>
 </head>
 
@@ -20,23 +48,24 @@ th,td{border:1px solid #999;padding:6px;text-align:center}
 <h2>نظام توزيع المنحة</h2>
 
 <label>المديرية:</label>
-<input id="directorate"><br>
+<input id="directorate">
 
 <label>المدرسة:</label>
-<input id="school"><br>
+<input id="school">
 
 <label>الرصيد المدور:</label>
-<input id="rolled" type="number"><br>
+<input id="rolled" type="number">
 
 <label>المنحة الحالية:</label>
-<input id="grant" type="number"><br>
+<input id="grant" type="number">
 
+<br>
 <button id="calcBtn">حساب الرصيد</button>
 
 <div class="summary">
-الرصيد الإجمالي الحالي: <b><span id="currentBalance">0</span></b> |
-مجموع الفواتير: <b><span id="totalInvoices">0</span></b> |
-الرصيد المتبقي الكلي: <b><span id="totalRemain">0</span></b>
+الرصيد الإجمالي الحالي: <span id="currentBalance">0</span> |
+مجموع الفواتير: <span id="totalInvoices">0</span> |
+الرصيد المتبقي الكلي: <span id="totalRemain">0</span>
 </div>
 
 <hr>
@@ -46,12 +75,15 @@ th,td{border:1px solid #999;padding:6px;text-align:center}
 رقم الفاتورة <input id="invoiceNo">
 التاريخ <input id="invoiceDate" type="date">
 المبلغ <input id="invoiceAmount" type="number">
+
 <button id="addInvoiceBtn">إضافة</button>
 
 <table id="invoiceTable">
 <thead>
 <tr>
-<th>رقم</th><th>تاريخ</th><th>المبلغ</th>
+<th>رقم</th>
+<th>تاريخ</th>
+<th>المبلغ</th>
 <th>مجتمعات التعلم</th>
 <th>الصيانة</th>
 <th>الشراكة</th>
@@ -63,7 +95,7 @@ th,td{border:1px solid #999;padding:6px;text-align:center}
 </table>
 
 <br>
-<button id="downloadBtn">تنزيل ملف Excel</button>
+<button id="downloadBtn">تحديث وتنزيل ملف تحليل المنحة</button>
 
 </div>
 
