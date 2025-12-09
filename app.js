@@ -1,189 +1,175 @@
 let invoices = [];
-let fixedBalance = 0;
+let balance = 0;
 
 // ===============================
-// ✅ حساب الرصيد مرة واحدة فقط
+// ✅ حساب الرصيد الكلي
 // ===============================
 function calculateBalance(){
     const rolledVal = Number(rolled.value) || 0;
     const grantVal  = Number(grant.value)  || 0;
 
-    fixedBalance = rolledVal + grantVal;
-    currentBalance.innerText = fixedBalance.toFixed(2);
-
-    updateTotals();
+    balance = rolledVal + grantVal;
+    currentBalance.innerText = balance.toFixed(2);
 }
 
 // ===============================
-// ✅ فتح نموذج فاتورة جديدة + تفريغ الحقول
+// ✅ التحقق أن مجموع النسب = 100%
 // ===============================
-function showNewInvoiceForm(){
-    invoiceNo.value = "";
-    invoiceDate.value = "";
-    invoiceAmount.value = "";
+function validateMainPercents(){
+    const sum =
+        (Number(p1.value)||0) +
+        (Number(p2.value)||0) +
+        (Number(p3.value)||0) +
+        (Number(p4.value)||0) +
+        (Number(p5.value)||0);
 
-    document.getElementById("invoiceForm").style.display = "block";
-    invoiceNo.focus();
+    if(sum !== 100){
+        percentWarning.innerText = "❌ مجموع نسب الصرف يجب أن يساوي 100%";
+        return false;
+    }
+
+    percentWarning.innerText = "";
+    return true;
+}
+
+[p1,p2,p3,p4,p5].forEach(inp=>{
+    inp.addEventListener("input", validateMainPercents);
+});
+
+// ===============================
+// ✅ اقتراح توزيع تلقائي
+// ===============================
+invoiceAmount.oninput = ()=>{
+    const amount = Number(invoiceAmount.value) || 0;
+
+    c1.value = (amount * (Number(p1.value)||0) / 100).toFixed(2);
+    c2.value = (amount * (Number(p2.value)||0) / 100).toFixed(2);
+    c3.value = (amount * (Number(p3.value)||0) / 100).toFixed(2);
+    c4.value = (amount * (Number(p4.value)||0) / 100).toFixed(2);
+    c5.value = (amount * (Number(p5.value)||0) / 100).toFixed(2);
+
+    validateDistribution();
+};
+
+// ===============================
+// ✅ التحقق أن مجموع التوزيع = مبلغ الفاتورة
+// ===============================
+[c1,c2,c3,c4,c5].forEach(inp=>{
+    inp.addEventListener("input", validateDistribution);
+});
+
+function validateDistribution(){
+    const sum =
+        (Number(c1.value)||0) +
+        (Number(c2.value)||0) +
+        (Number(c3.value)||0) +
+        (Number(c4.value)||0) +
+        (Number(c5.value)||0);
+
+    sumDist.innerText = sum.toFixed(2);
+
+    if(sum !== Number(invoiceAmount.value)){
+        limitWarning.innerText = "❌ مجموع التوزيع يجب أن يساوي مبلغ الفاتورة";
+        return false;
+    }
+
+    limitWarning.innerText = "";
+    return true;
 }
 
 // ===============================
-// ✅ إضافة الفاتورة (بدون تفريغ الحقول)
+// ✅ إضافة الفاتورة مع المراقبة
 // ===============================
 function addInvoice(){
-    const no = invoiceNo.value.trim();
-    const date = invoiceDate.value;
-    const amount = Number(invoiceAmount.value);
 
-    if(!no || !date || !amount){
-        alert("يرجى إدخال رقم الفاتورة والتاريخ والمبلغ");
+    if(!validateMainPercents()){
+        alert("يجب أن يكون مجموع نسب الصرف = 100%");
         return;
     }
 
-    invoices.push({
-        no,
-        date,
-        amount,
-        c1: amount * 0.10,
-        c2: amount * 0.30,
-        c3: amount * 0.10,
-        c4: amount * 0.50
-    });
+    if(!validateDistribution()) return;
 
-    updateInvoiceTable();
-    updateTotals();
+    const inv = {
+        no: invoiceNo.value,
+        date: invoiceDate.value,
+        c1: Number(c1.value),
+        c2: Number(c2.value),
+        c3: Number(c3.value),
+        c4: Number(c4.value),
+        c5: Number(c5.value)
+    };
 
-    alert("تمت إضافة الفاتورة بنجاح");
+    const sum1 = invoices.reduce((s,i)=>s+i.c1,0) + inv.c1;
+    const sum2 = invoices.reduce((s,i)=>s+i.c2,0) + inv.c2;
+    const sum3 = invoices.reduce((s,i)=>s+i.c3,0) + inv.c3;
+    const sum4 = invoices.reduce((s,i)=>s+i.c4,0) + inv.c4;
+    const sum5 = invoices.reduce((s,i)=>s+i.c5,0) + inv.c5;
+
+    if(sum1 > (balance * p1.value / 100)){ alert("❌ تجاوز مجتمعات التعلم"); return; }
+    if(sum2 > (balance * p2.value / 100)){ alert("❌ تجاوز الصيانة"); return; }
+    if(sum3 > (balance * p3.value / 100)){ alert("❌ تجاوز الشراكة"); return; }
+    if(sum4 > (balance * p4.value / 100)){ alert("❌ تجاوز لوازم التعلم"); return; }
+    if(sum5 > (balance * p5.value / 100)){ alert("❌ تجاوز تشجيع التميز"); return; }
+
+    invoices.push(inv);
+    redrawTable();
 }
 
 // ===============================
-// ✅ عرض جدول الفواتير + التعديل اليدوي
+// ✅ عرض جدول الفواتير
 // ===============================
-function updateInvoiceTable(){
+function redrawTable(){
     const tbody = document.querySelector("#invoiceTable tbody");
     tbody.innerHTML = "";
 
-    invoices.forEach((inv,i)=>{
-        const remain = inv.amount - (inv.c1 + inv.c2 + inv.c3 + inv.c4);
-
+    invoices.forEach(inv=>{
         const tr = document.createElement("tr");
-
         tr.innerHTML = `
             <td>${inv.no}</td>
             <td>${inv.date}</td>
-            <td>${inv.amount.toFixed(2)}</td>
-
-            <td><input type="number" value="${inv.c1.toFixed(2)}" data-i="${i}" data-f="c1"></td>
-            <td><input type="number" value="${inv.c2.toFixed(2)}" data-i="${i}" data-f="c2"></td>
-            <td><input type="number" value="${inv.c3.toFixed(2)}" data-i="${i}" data-f="c3"></td>
-            <td><input type="number" value="${inv.c4.toFixed(2)}" data-i="${i}" data-f="c4"></td>
-
-            <td class="remain">${remain.toFixed(2)}</td>
+            <td>${inv.c1}</td>
+            <td>${inv.c2}</td>
+            <td>${inv.c3}</td>
+            <td>${inv.c4}</td>
+            <td>${inv.c5}</td>
         `;
-
         tbody.appendChild(tr);
     });
-
-    document.querySelectorAll("#invoiceTable input").forEach(inp=>{
-        inp.addEventListener("input", editDist);
-    });
 }
 
 // ===============================
-// ✅ تعديل توزيع الفاتورة يدويًا
+// ✅ تحديث ملف Excel الأصلي
 // ===============================
-function editDist(e){
-    const i = Number(e.target.dataset.i);
-    const field = e.target.dataset.f;
-    const value = Number(e.target.value) || 0;
+async function updateExcel(){
 
-    invoices[i][field] = value;
-
-    const inv = invoices[i];
-    const remain = inv.amount - (inv.c1 + inv.c2 + inv.c3 + inv.c4);
-
-    e.target.closest("tr").querySelector(".remain").innerText = remain.toFixed(2);
-
-    updateTotals();
-}
-
-// ===============================
-// ✅ تحديث المجاميع بالأعلى
-// ===============================
-function updateTotals(){
-    const totalInv = invoices.reduce((sum,i)=>sum + i.amount, 0);
-    const remain  = fixedBalance - totalInv;
-
-    totalInvoices.innerText = totalInv.toFixed(2);
-    totalRemain.innerText   = remain.toFixed(2);
-}
-
-// =========================================================
-// ✅ تحديث القالب الأصلي نفسه مع الحفاظ على التنسيق 100%
-// =========================================================
-async function downloadExcel(){
-
-    const fileInput = document.getElementById("templateFile");
-
-    if(!fileInput.files.length){
-        alert("يرجى اختيار ملف القالب الأصلي أولًا");
-        return;
-    }
-
-    const file = fileInput.files[0];
-
-    // ✅ قراءة القالب كما هو (بكل تنسيقه)
-    const arrayBuffer = await file.arrayBuffer();
-    const wb = XLSX.read(arrayBuffer, { type: "array" });
-
+    const res = await fetch("تحليل المنحة.xlsx");
+    const buf = await res.arrayBuffer();
+    const wb = XLSX.read(buf,{type:"array"});
     const ws = wb.Sheets["تحليل منحة المدرسة"];
 
-    // ===============================
-    // ✅ تحديث خلايا الرأس فقط
-    // ===============================
-    ws["C4"] = { t:"s", v: directorate.value };                // المديرية
-    ws["C5"] = { t:"s", v: school.value };                     // المدرسة
-    ws["D5"] = { t:"n", v: Number(rolled.value) || 0 };        // الرصيد المدور
-    ws["E5"] = { t:"n", v: Number(grant.value)  || 0 };        // المنحة الحالية
+    ws["C4"] = {t:"s",v:directorate.value};
+    ws["E4"] = {t:"s",v:school.value};
+    ws["C6"] = {t:"n",v:Number(rolled.value)||0};
+    ws["D6"] = {t:"n",v:Number(grant.value)||0};
 
-    // ===================================================
-    // ✅ البحث عن آخر صف مستخدم في عمود المبلغ (E)
-    // ===================================================
-    let startRow = 25;
-    for(let r = 25; r < 2000; r++){
-        if(ws["E"+r] && ws["E"+r].v){
-            startRow = r + 1;
-        }
-    }
+    ws["C10"] = {t:"n",v:Number(p1.value)||0};
+    ws["D10"] = {t:"n",v:Number(p2.value)||0};
+    ws["E10"] = {t:"n",v:Number(p3.value)||0};
+    ws["F10"] = {t:"n",v:Number(p4.value)||0};
+    ws["G10"] = {t:"n",v:Number(p5.value)||0};
 
-    // ===================================================
-    // ✅ إضافة الفواتير الجديدة أسفل الفواتير القديمة
-    // ===================================================
-    invoices.forEach((inv, index)=>{
-        const r = startRow + index;
+    let row = 25;
 
-        ws["B"+r] = { t:"s", v: inv.no };       // رقم الفاتورة
-        ws["C"+r] = { t:"n", v: index+1 };      // رقم القيد
-        ws["D"+r] = { t:"s", v: inv.date };     // التاريخ
-        ws["E"+r] = { t:"n", v: inv.amount };   // مبلغ الفاتورة
-
-        ws["F"+r] = { t:"n", v: inv.c1 };        // مجتمعات التعلم
-        ws["H"+r] = { t:"n", v: inv.c2 };        // الصيانة
-        ws["J"+r] = { t:"n", v: inv.c3 };        // الشراكة
-        ws["L"+r] = { t:"n", v: inv.c4 };        // لوازم التعلم
+    invoices.forEach(inv=>{
+        ws["B"+row] = {t:"s",v:inv.no};
+        ws["C"+row] = {t:"s",v:inv.date};
+        ws["D"+row] = {t:"n",v:inv.c1};
+        ws["F"+row] = {t:"n",v:inv.c2};
+        ws["H"+row] = {t:"n",v:inv.c3};
+        ws["J"+row] = {t:"n",v:inv.c4};
+        ws["N"+row] = {t:"n",v:inv.c5};
+        row++;
     });
 
-    // ===============================
-    // ✅ تنزيل نفس الملف الأصلي محدثًا
-    // ===============================
-    XLSX.writeFile(wb, file.name);
+    XLSX.writeFile(wb,"تحليل المنحة.xlsx");
 }
-
-// ===============================
-// ✅ ربط الأزرار بالأحداث
-// ===============================
-document.addEventListener("DOMContentLoaded", ()=>{
-    calcBtn.onclick        = calculateBalance;
-    newInvoiceBtn.onclick = showNewInvoiceForm;
-    addInvoiceBtn.onclick = addInvoice;
-    downloadBtn.onclick   = downloadExcel;
-});
