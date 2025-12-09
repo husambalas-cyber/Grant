@@ -1,14 +1,14 @@
 let invoices = [];
 let fixedBalance = 0;
 
-// ✅ حساب الرصيد مرة واحدة فقط
+// ✅ حساب الرصيد الكلي مرة واحدة
 function calculateBalance(){
-    const rolled = Number(document.getElementById("rolled").value) || 0;
-    const grant = Number(document.getElementById("grant").value) || 0;
+    const rolledVal = Number(rolled.value) || 0;
+    const grantVal  = Number(grant.value) || 0;
 
-    fixedBalance = rolled + grant;
+    fixedBalance = rolledVal + grantVal;
+    currentBalance.innerText = fixedBalance.toFixed(2);
 
-    document.getElementById("currentBalance").innerText = fixedBalance.toFixed(2);
     updateTotals();
 }
 
@@ -23,7 +23,6 @@ function addInvoice(){
         return;
     }
 
-    // ✅ توزيع افتراضي قابل للتعديل
     invoices.push({
         no,
         date,
@@ -38,7 +37,7 @@ function addInvoice(){
     updateTotals();
 }
 
-// ✅ تحديث جدول الفواتير بدون كسر التعديلات
+// ✅ عرض الجدول مع السماح بالتعديل
 function updateInvoiceTable(){
     const tbody = document.querySelector("#invoiceTable tbody");
     tbody.innerHTML = "";
@@ -64,13 +63,12 @@ function updateInvoiceTable(){
         tbody.appendChild(tr);
     });
 
-    // ✅ ربط التعديل مباشرة بدون إعادة رسم الجدول
     document.querySelectorAll("#invoiceTable input").forEach(inp=>{
         inp.addEventListener("input", editDist);
     });
 }
 
-// ✅ تعديل التوزيع اليدوي مباشرة
+// ✅ تعديل توزيع الفاتورة مباشرة
 function editDist(e){
     const i = Number(e.target.dataset.i);
     const field = e.target.dataset.f;
@@ -81,59 +79,58 @@ function editDist(e){
     const inv = invoices[i];
     const remain = inv.amount - (inv.c1 + inv.c2 + inv.c3 + inv.c4);
 
-    // ✅ تحديث الرصيد المتبقي للسطر فقط
-    const row = e.target.closest("tr");
-    row.querySelector(".remain").innerText = remain.toFixed(2);
+    e.target.closest("tr").querySelector(".remain").innerText = remain.toFixed(2);
 
     updateTotals();
 }
 
-// ✅ تحديث المجاميع بالأعلى
+// ✅ تحديث المجاميع
 function updateTotals(){
     const totalInv = invoices.reduce((sum,i)=>sum + i.amount, 0);
-    const remain = fixedBalance - totalInv;
+    const remain  = fixedBalance - totalInv;
 
-    document.getElementById("totalInvoices").innerText = totalInv.toFixed(2);
-    document.getElementById("totalRemain").innerText = remain.toFixed(2);
+    totalInvoices.innerText = totalInv.toFixed(2);
+    totalRemain.innerText   = remain.toFixed(2);
 }
 
-// ✅ تنزيل ملف Excel مطابق للجدول
-function downloadExcel(){
-    if(typeof XLSX === "undefined"){
-        alert("مكتبة الإكسل لم يتم تحميلها");
-        return;
-    }
+// ✅ تحديث القالب الأصلي وتنزيله
+async function downloadExcel(){
 
-    const wb = XLSX.utils.book_new();
+    const response = await fetch("تحليل المنحة.xlsx");
+    const arrayBuffer = await response.arrayBuffer();
+    const wb = XLSX.read(arrayBuffer, { type: "array" });
 
-    const header = [
-        ["المديرية", directorate.value],
-        ["المدرسة", school.value],
-        ["الرصيد الكلي", fixedBalance],
-        [],
-        ["رقم","تاريخ","المبلغ","تعلم","صيانة","شراكة","لوازم","متبقي"]
-    ];
+    const ws = wb.Sheets["تحليل منحة المدرسة"];
 
-    const rows = invoices.map(i => [
-        i.no,
-        i.date,
-        i.amount.toFixed(2),
-        i.c1.toFixed(2),
-        i.c2.toFixed(2),
-        i.c3.toFixed(2),
-        i.c4.toFixed(2),
-        (i.amount - (i.c1+i.c2+i.c3+i.c4)).toFixed(2)
-    ]);
+    // ✅ تحديث بيانات الرأس
+    ws["C4"] = { t:"s", v: directorate.value };
+    ws["C5"] = { t:"s", v: school.value };
+    ws["D5"] = { t:"n", v: Number(rolled.value) || 0 };
+    ws["E5"] = { t:"n", v: Number(grant.value) || 0 };
 
-    const ws = XLSX.utils.aoa_to_sheet([...header, ...rows]);
-    XLSX.utils.book_append_sheet(wb, ws, "المنحة");
+    // ✅ إدخال الفواتير من الصف 25 نزولًا
+    let startRow = 25;
 
-    XLSX.writeFile(wb,"Grant.xlsx");
+    invoices.forEach((inv, index)=>{
+        const r = startRow + index;
+
+        ws["B"+r] = { t:"s", v: inv.no };
+        ws["C"+r] = { t:"n", v: index+1 };
+        ws["D"+r] = { t:"s", v: inv.date };
+        ws["E"+r] = { t:"n", v: inv.amount };
+
+        ws["F"+r] = { t:"n", v: inv.c1 };
+        ws["H"+r] = { t:"n", v: inv.c2 };
+        ws["J"+r] = { t:"n", v: inv.c3 };
+        ws["L"+r] = { t:"n", v: inv.c4 };
+    });
+
+    XLSX.writeFile(wb, "تحليل المنحة.xlsx");
 }
 
-// ✅ ربط الأزرار بشكل آمن
-document.addEventListener("DOMContentLoaded",()=>{
-    calcBtn.onclick = calculateBalance;
+// ✅ ربط الأزرار
+document.addEventListener("DOMContentLoaded", ()=>{
+    calcBtn.onclick      = calculateBalance;
     addInvoiceBtn.onclick = addInvoice;
-    downloadBtn.onclick = downloadExcel;
+    downloadBtn.onclick  = downloadExcel;
 });
