@@ -38,6 +38,13 @@ th,td{
     margin-top:10px;
     font-weight:bold;
 }
+#invoiceForm{
+    display:none;
+    background:#f9f9f9;
+    padding:10px;
+    border-radius:6px;
+    margin-top:10px;
+}
 </style>
 </head>
 
@@ -70,13 +77,19 @@ th,td{
 
 <hr>
 
-<h3>إضافة فاتورة</h3>
+<!-- ✅ زر إظهار نموذج الفاتورة -->
+<button id="newInvoiceBtn">➕ إضافة فاتورة جديدة</button>
 
-رقم الفاتورة <input id="invoiceNo">
-التاريخ <input id="invoiceDate" type="date">
-المبلغ <input id="invoiceAmount" type="number">
+<!-- ✅ نموذج إدخال الفاتورة -->
+<div id="invoiceForm">
 
-<button id="addInvoiceBtn">إضافة</button>
+    رقم الفاتورة <input id="invoiceNo">
+    التاريخ <input id="invoiceDate" type="date">
+    المبلغ <input id="invoiceAmount" type="number">
+
+    <button id="addInvoiceBtn">✅ إضافة الفاتورة</button>
+
+</div>
 
 <table id="invoiceTable">
 <thead>
@@ -95,7 +108,13 @@ th,td{
 </table>
 
 <br>
-<button id="downloadBtn">تحديث وتنزيل ملف تحليل المنحة</button>
+
+<!-- ✅ رفع القالب -->
+<input type="file" id="templateFile" accept=".xlsx">
+
+<br><br>
+
+<button id="downloadBtn">تحديث القالب وإضافة الفواتير</button>
 
 </div>
 
