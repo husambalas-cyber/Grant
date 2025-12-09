@@ -2,49 +2,16 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>نظام تحليل المنحة</title>
+<title>نظام تعبئة وتحليل المنحة</title>
 
 <style>
-body{
-    font-family: Arial;
-    background:#f2f2f2;
-    padding:20px;
-}
-.box{
-    background:#fff;
-    padding:20px;
-    border-radius:8px;
-    max-width:1200px;
-    margin:auto;
-}
-input,button{
-    padding:6px;
-    margin:4px;
-}
-table{
-    width:100%;
-    border-collapse:collapse;
-    margin-top:10px;
-}
-th,td{
-    border:1px solid #999;
-    padding:6px;
-    text-align:center;
-}
-.summary{
-    background:#e8f0ff;
-    padding:10px;
-    border-radius:6px;
-    margin-top:10px;
-    font-weight:bold;
-}
-#invoiceForm{
-    display:none;
-    background:#f9f9f9;
-    padding:10px;
-    border-radius:6px;
-    margin-top:10px;
-}
+body{font-family:Arial;background:#f2f2f2;padding:20px}
+.box{background:#fff;padding:20px;border-radius:8px;max-width:1150px;margin:auto}
+input,button{padding:6px;margin:5px}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{border:1px solid #999;padding:6px;text-align:center}
+.summary{background:#e8f0ff;padding:10px;border-radius:6px;margin-top:10px;font-weight:bold}
+.error{color:red;font-weight:bold}
 </style>
 </head>
 
@@ -52,7 +19,11 @@ th,td{
 
 <div class="box">
 
-<h2>نظام توزيع المنحة</h2>
+<h2>نظام تعبئة وتحليل المنحة</h2>
+
+<!-- ============================= -->
+<!--        بيانات الرأس          -->
+<!-- ============================= -->
 
 <label>المديرية:</label>
 <input id="directorate">
@@ -67,48 +38,110 @@ th,td{
 <input id="grant" type="number">
 
 <br>
-<button id="calcBtn">حساب الرصيد</button>
+<button onclick="calculateBalance()">حساب الرصيد</button>
 
 <div class="summary">
-الرصيد الإجمالي الحالي: <span id="currentBalance">0</span> |
-مجموع الفواتير: <span id="totalInvoices">0</span> |
-الرصيد المتبقي الكلي: <span id="totalRemain">0</span>
+الرصيد الحالي: <span id="currentBalance">0</span>
 </div>
 
 <hr>
 
-<button id="newInvoiceBtn">➕ إضافة فاتورة جديدة</button>
+<!-- ============================= -->
+<!--     نسب الصرف (C10–G10)      -->
+<!-- ============================= -->
 
-<div id="invoiceForm">
-    رقم الفاتورة <input id="invoiceNo">
-    التاريخ <input id="invoiceDate" type="date">
-    المبلغ <input id="invoiceAmount" type="number">
-    <button id="addInvoiceBtn">✅ إضافة الفاتورة</button>
+<h3>نسب الصرف الرئيسية (يجب أن يكون مجموعها = 100%)</h3>
+
+<table>
+<tr>
+<th>مجتمعات التعلم</th>
+<th>الصيانة</th>
+<th>الشراكة</th>
+<th>لوازم التعلم</th>
+<th>تشجيع التميز</th>
+</tr>
+
+<tr>
+<td><input id="p1" type="number"> %</td>
+<td><input id="p2" type="number"> %</td>
+<td><input id="p3" type="number"> %</td>
+<td><input id="p4" type="number"> %</td>
+<td><input id="p5" type="number"> %</td>
+</tr>
+</table>
+
+<div id="percentWarning" class="error"></div>
+
+<hr>
+
+<!-- ============================= -->
+<!--        إضافة فاتورة          -->
+<!-- ============================= -->
+
+<h3>إضافة فاتورة جديدة</h3>
+
+رقم الفاتورة <input id="invoiceNo">
+التاريخ <input id="invoiceDate" type="date">
+مبلغ الفاتورة <input id="invoiceAmount" type="number">
+
+<br><br>
+
+<table>
+<tr>
+<th>مجتمعات التعلم</th>
+<th>الصيانة</th>
+<th>الشراكة</th>
+<th>لوازم التعلم</th>
+<th>تشجيع التميز</th>
+</tr>
+<tr>
+<td><input id="c1"></td>
+<td><input id="c2"></td>
+<td><input id="c3"></td>
+<td><input id="c4"></td>
+<td><input id="c5"></td>
+</tr>
+</table>
+
+<div class="summary">
+مجموع التوزيع = <span id="sumDist">0</span>
 </div>
+
+<div id="limitWarning" class="error"></div>
+
+<br>
+<button onclick="addInvoice()">إضافة الفاتورة</button>
+
+<hr>
+
+<!-- ============================= -->
+<!--       جدول الفواتير          -->
+<!-- ============================= -->
+
+<h3>الفواتير المُضافة</h3>
 
 <table id="invoiceTable">
 <thead>
 <tr>
 <th>رقم</th>
 <th>تاريخ</th>
-<th>المبلغ</th>
 <th>مجتمعات التعلم</th>
 <th>الصيانة</th>
 <th>الشراكة</th>
 <th>لوازم التعلم</th>
-<th>الرصيد المتبقي</th>
+<th>تشجيع التميز</th>
 </tr>
 </thead>
 <tbody></tbody>
 </table>
 
-<br>
+<hr>
 
-<input type="file" id="templateFile" accept=".xlsx">
+<!-- ============================= -->
+<!--  تحديث ملف Excel وتحميله      -->
+<!-- ============================= -->
 
-<br><br>
-
-<button id="downloadBtn">تحديث القالب وإضافة الفواتير</button>
+<button onclick="updateExcel()">تحديث ملف Excel الأصلي</button>
 
 </div>
 
