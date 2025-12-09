@@ -1,6 +1,7 @@
 let invoices = [];
 let balance = 0;
 
+// حساب الرصيد
 function calculateBalance(){
     const rolledVal = Number(rolled.value) || 0;
     const grantVal  = Number(grant.value)  || 0;
@@ -8,6 +9,7 @@ function calculateBalance(){
     currentBalance.innerText = balance.toFixed(2);
 }
 
+// التحقق أن مجموع النسب = 100%
 function validateMainPercents(){
     const sum =
         (Number(p1.value)||0) +
@@ -28,6 +30,7 @@ function validateMainPercents(){
     inp.addEventListener("input", validateMainPercents);
 });
 
+// اقتراح توزيع تلقائي
 invoiceAmount.oninput = ()=>{
     const amount = Number(invoiceAmount.value) || 0;
     c1.value = (amount * (Number(p1.value)||0) / 100).toFixed(2);
@@ -42,6 +45,7 @@ invoiceAmount.oninput = ()=>{
     inp.addEventListener("input", validateDistribution);
 });
 
+// التحقق من مجموع التوزيع
 function validateDistribution(){
     const sum =
         (Number(c1.value)||0) +
@@ -60,6 +64,7 @@ function validateDistribution(){
     return true;
 }
 
+// إضافة فاتورة
 function addInvoice(){
     if(!validateMainPercents()) return;
     if(!validateDistribution()) return;
@@ -78,6 +83,7 @@ function addInvoice(){
     redrawTable();
 }
 
+// عرض الفواتير
 function redrawTable(){
     const tbody = document.querySelector("#invoiceTable tbody");
     tbody.innerHTML = "";
@@ -97,20 +103,56 @@ function redrawTable(){
     });
 }
 
+// ✅ زر اختبار فتح ملف Excel
 async function testOpenExcel(){
     try {
         const res = await fetch("تحليل المنحة.xlsx");
         if(!res.ok){
-            alert("❌ لم يتم العثور على الملف");
+            alert("❌ لم يتم العثور على الملف في المستودع");
             return;
         }
         const buf = await res.arrayBuffer();
         const wb = XLSX.read(buf,{type:"array"});
-        alert("✅ تم فتح الملف بنجاح\nعدد الأوراق: " + wb.SheetNames.length);
+        alert(
+            "✅ تم فتح الملف بنجاح\n" +
+            "عدد الأوراق: " + wb.SheetNames.length + "\n" +
+            wb.SheetNames.join("\n")
+        );
     } catch(err){
-        alert("❌ خطأ في الفتح: " + err.message);
+        alert("❌ خطأ أثناء فتح الملف:\n" + err.message);
     }
 }
 
+// ✅ تحديث ملف Excel
 async function updateExcel(){
     const res = await fetch("تحليل المنحة.xlsx");
+    const buf = await res.arrayBuffer();
+    const wb = XLSX.read(buf,{type:"array"});
+    const ws = wb.Sheets["تحليل منحة المدرسة"];
+
+    ws["C4"] = {t:"s",v:directorate.value};
+    ws["E4"] = {t:"s",v:school.value};
+    ws["C6"] = {t:"n",v:Number(rolled.value)||0};
+    ws["D6"] = {t:"n",v:Number(grant.value)||0};
+
+    ws["C10"] = {t:"n",v:Number(p1.value)||0};
+    ws["D10"] = {t:"n",v:Number(p2.value)||0};
+    ws["E10"] = {t:"n",v:Number(p3.value)||0};
+    ws["F10"] = {t:"n",v:Number(p4.value)||0};
+    ws["G10"] = {t:"n",v:Number(p5.value)||0};
+
+    let row = 25;
+
+    invoices.forEach(inv=>{
+        ws["B"+row] = {t:"s",v:inv.no};
+        ws["C"+row] = {t:"s",v:inv.date};
+        ws["D"+row] = {t:"n",v:inv.c1};
+        ws["F"+row] = {t:"n",v:inv.c2};
+        ws["H"+row] = {t:"n",v:inv.c3};
+        ws["J"+row] = {t:"n",v:inv.c4};
+        ws["N"+row] = {t:"n",v:inv.c5};
+        row++;
+    });
+
+    XLSX.writeFile(wb,"تحليل المنحة.xlsx");
+}
