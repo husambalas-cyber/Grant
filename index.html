@@ -54,7 +54,8 @@
         <label>المنحة الحالية:</label>
         <input id="grant" type="number"><br>
 
-        <button onclick="calculateBalance()">حساب الرصيد</button>
+        <!-- زر حساب الرصيد -->
+        <button id="calcBtn" type="button">حساب الرصيد</button>
 
         <h3>الرصيد الحالي: <span id="currentBalance">0</span></h3>
 
@@ -71,7 +72,8 @@
         <label>المبلغ:</label>
         <input id="invoiceAmount" type="number"><br>
 
-        <button onclick="addInvoice()">إضافة الفاتورة</button>
+        <!-- زر إضافة فاتورة -->
+        <button id="addInvoiceBtn" type="button">إضافة الفاتورة</button>
 
         <h3>الفواتير</h3>
         <table id="invoiceTable">
@@ -88,7 +90,7 @@
         <h3>توزيع المبلغ المقترح</h3>
 
         <table>
-            <tr><th>البند</th><th>الحد المسموح</th><th>المقترح</th></tr>
+            <tr><th>البند</th><th>الحد المسموح</th><th>المقترح (دينار)</th></tr>
             <tr><td>مجتمعات التعلم</td><td>5–20%</td><td id="c1"></td></tr>
             <tr><td>الصيانة</td><td>5–40%</td><td id="c2"></td></tr>
             <tr><td>الشراكة مع المجتمع</td><td>5–15%</td><td id="c3"></td></tr>
@@ -97,12 +99,13 @@
 
         <h3>الرصيد المتبقي: <span id="remain">0</span></h3>
 
-        <button onclick="downloadExcel()">تنزيل ملف Excel</button>
+        <!-- زر تنزيل الإكسل -->
+        <button id="downloadBtn" type="button">تنزيل ملف Excel</button>
     </div>
 
-    <!-- تحميل XLSX.js لإخراج Excel -->
+    <!-- مكتبة Excel -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
+    <!-- سكربت التطبيق -->
     <script src="app.js"></script>
 </body>
 </html>
