@@ -138,7 +138,33 @@ function redrawTable(){
 }
 
 // ===============================
-// ✅ تحديث ملف Excel الأصلي
+// ✅ اختبار فتح ملف Excel من المستودع
+// ===============================
+async function testOpenExcel(){
+    try {
+        const res = await fetch("تحليل المنحة.xlsx");
+
+        if(!res.ok){
+            alert("❌ لم يتم العثور على الملف في المستودع\nتأكد أن الاسم مطابق تمامًا: تحليل المنحة.xlsx");
+            return;
+        }
+
+        const buf = await res.arrayBuffer();
+        const wb = XLSX.read(buf,{type:"array"});
+
+        alert(
+            "✅ تم فتح الملف بنجاح!\n\n" +
+            "عدد الأوراق: " + wb.SheetNames.length + "\n" +
+            "الأوراق:\n" + wb.SheetNames.join("\n")
+        );
+
+    } catch(err){
+        alert("❌ خطأ أثناء فتح الملف:\n" + err.message);
+    }
+}
+
+// ===============================
+// ✅ فتح ملف Excel من المستودع وتحديثه
 // ===============================
 async function updateExcel(){
 
